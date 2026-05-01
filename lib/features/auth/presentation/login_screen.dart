@@ -1,5 +1,6 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/app_routes.dart';
@@ -19,13 +20,30 @@ class _LoginScreenState extends State<LoginScreen> {
   final _authService = AuthService();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  StreamSubscription<AuthState>? _authSubscription;
 
   _AuthMode _mode = _AuthMode.signIn;
   bool _isLoading = false;
   String? _message;
 
   @override
+  void initState() {
+    super.initState();
+
+    if (AuthConfig.hasSupabaseConfig) {
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange
+          .listen((state) {
+            if (state.session != null &&
+                state.event == AuthChangeEvent.signedIn) {
+              _openOnboarding();
+            }
+          });
+    }
+  }
+
+  @override
   void dispose() {
+    _authSubscription?.cancel();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -174,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     await _runAuthAction(() async {
       await _authService.signInWithGoogle();
-      _openOnboarding();
+      _setMessage('Complete Google sign-in in the browser.');
     });
   }
 
@@ -190,8 +208,6 @@ class _LoginScreenState extends State<LoginScreen> {
       _setMessage(error.message);
     } on AuthSetupException catch (error) {
       _setMessage(error.message);
-    } on GoogleSignInException catch (error) {
-      _setMessage(error.description ?? error.code.toString());
     } catch (error) {
       _setMessage(error.toString());
     } finally {
@@ -268,7 +284,7 @@ class _SetupNotice extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Text(
-        'Auth setup needed: add SUPABASE_URL, SUPABASE_ANON_KEY, and GOOGLE_WEB_CLIENT_ID to .env.',
+        'Auth setup needed: add SUPABASE_URL and SUPABASE_ANON_KEY to .env.',
         style: TextStyle(height: 1.35),
       ),
     );

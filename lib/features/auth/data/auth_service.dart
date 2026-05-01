@@ -1,12 +1,9 @@
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/auth_config.dart';
 
 class AuthService {
   AuthService();
-
-  static bool _googleSignInInitialized = false;
 
   bool get isConfigured => AuthConfig.hasSupabaseConfig;
 
@@ -40,49 +37,15 @@ class AuthService {
   Future<void> signInWithGoogle() async {
     _ensureSupabaseConfigured();
 
-    if (!AuthConfig.hasGoogleConfig) {
-      throw const AuthSetupException(
-        'Google sign-in needs GOOGLE_WEB_CLIENT_ID in .env.',
-      );
-    }
-
-    if (!AuthConfig.hasValidGoogleWebClientId) {
-      throw const AuthSetupException(
-        'GOOGLE_WEB_CLIENT_ID should end with .apps.googleusercontent.com.',
-      );
-    }
-
-    final googleSignIn = GoogleSignIn.instance;
-    if (!_googleSignInInitialized) {
-      await googleSignIn.initialize(
-        clientId: AuthConfig.googleIosClientId.isEmpty
-            ? null
-            : AuthConfig.googleIosClientId,
-        serverClientId: AuthConfig.googleWebClientId,
-      );
-      _googleSignInInitialized = true;
-    }
-
-    final googleAccount = await googleSignIn.authenticate();
-    final googleAuth = googleAccount.authentication;
-    final googleAuthorization = await googleAccount.authorizationClient
-        .authorizationForScopes(const ['email', 'profile']);
-
-    final idToken = googleAuth.idToken;
-    final accessToken = googleAuthorization?.accessToken;
-
-    if (idToken == null) {
-      throw const AuthSetupException('Google did not return an ID token.');
-    }
-    if (accessToken == null) {
-      throw const AuthSetupException('Google did not return an access token.');
-    }
-
-    await _client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: accessToken,
+    final opened = await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: AuthConfig.oauthRedirectUrl,
+      scopes: 'email profile',
     );
+
+    if (!opened) {
+      throw const AuthSetupException('Could not open Google sign-in.');
+    }
   }
 
   Future<void> signOut() async {
@@ -92,7 +55,7 @@ class AuthService {
   void _ensureSupabaseConfigured() {
     if (!AuthConfig.hasSupabaseConfig) {
       throw const AuthSetupException(
-        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY with --dart-define.',
+        'Supabase is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to .env.',
       );
     }
   }
