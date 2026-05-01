@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="phone">
+    <div class="status-bar"><span data-time>09:30</span><span class="status-icons"><i class="signal"></i><i class="signal"></i><i class="signal"></i><i class="pill-dot"></i></span></div>
+    <section class="screen with-nav">
+      <p class="eyebrow">Preferences</p>
+      <h2>Coach settings</h2>
+      <div class="card">
+        <div class="settings-row">
+          <div><strong>Floating coach</strong><p class="small">Show overlay reminders during focus blocks.</p></div>
+          <span class="switch" aria-hidden="true"></span>
+        </div>
+        <div class="settings-row">
+          <div><strong>Smart alarms</strong><p class="small">Let the coach schedule exact reminders.</p></div>
+          <span class="switch" aria-hidden="true"></span>
+        </div>
+        <div class="settings-row">
+          <div><strong>Distraction detection</strong><p class="small">Use app usage permission in the real app.</p></div>
+          <span class="switch" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Coaching tone</h3>
+        <div class="tag-row">
+          <span class="tag">Calm</span>
+          <span class="tag blue">Direct</span>
+          <span class="tag gold">Encouraging</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Focus hours</h3>
+        <div class="row between"><span>Deep work window</span><strong>9 AM - 12 PM</strong></div>
+        <div class="row between"><span>Quiet hours</span><strong>10 PM - 6 AM</strong></div>
+      </div>
+      <div class="card tint-card">
+        <h3>Privacy demo note</h3>
+        <p>This prototype does not collect data. The real app should keep sensitive goals local unless the user enables cloud sync.</p>
+      </div>
+    </section>
+    <nav class="bottom-nav">
+      <a class="nav-item" href="dashboard.html">Home</a><a class="nav-item" href="plan.html">Plan</a><a class="nav-item" href="floating-coach.html">Coach</a><a class="nav-item" href="reports.html">Reports</a><a class="nav-item active" href="settings.html">Settings</a>
+    </nav>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

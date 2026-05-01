@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Floating Coach</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="phone overlay-page">
+    <div class="status-bar" style="color:white"><span data-time>09:30</span><span class="status-icons"><i class="signal" style="background:white"></i><i class="signal" style="background:white"></i><i class="signal" style="background:white"></i><i class="pill-dot" style="background:white"></i></span></div>
+    <div class="mock-app-blur">
+      <div class="card"><h2>Deep work block</h2><p>Build HTML demo screens</p></div>
+      <div class="card"><h3>Habits</h3><p>Morning planning complete. Movement pending.</p></div>
+      <div class="grid-2"><div class="card metric"><strong>74%</strong></div><div class="card metric"><strong>3/5</strong></div></div>
+    </div>
+    <div class="floating-bubble">AI</div>
+    <section class="floating-card">
+      <p class="eyebrow">Task popup</p>
+      <h3>Did you complete your deep work block?</h3>
+      <p>Your goal was 25 minutes on the app prototype. Tell me what happened so I can update today's score and tomorrow's plan.</p>
+      <div class="tag-row"><span class="tag blue" data-coach-status>Awaiting action</span></div>
+      <textarea class="reason-box" aria-label="Lag reason">I got distracted after lunch and need this task broken into smaller steps.</textarea>
+      <div class="quick-actions" style="margin-top:14px">
+        <button class="btn" data-coach-action="Completed. Report updated.">Completed</button>
+        <button class="btn secondary" data-coach-action="Marked as lagging. Coach will adjust.">Not done</button>
+      </div>
+      <div class="quick-actions" style="margin-top:10px">
+        <button class="btn secondary" data-coach-action="Snoozed 15 min.">Snooze</button>
+        <button class="btn secondary" data-coach-action="Extra reminder added.">Add reminder</button>
+      </div>
+      <a class="btn secondary" style="margin-top:10px" href="dashboard.html">Back to dashboard</a>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

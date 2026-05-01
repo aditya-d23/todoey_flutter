@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schedule</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="phone">
+    <div class="status-bar"><span data-time>09:30</span><span class="status-icons"><i class="signal"></i><i class="signal"></i><i class="signal"></i><i class="pill-dot"></i></span></div>
+    <section class="screen with-nav">
+      <div class="top-row">
+        <div>
+          <p class="eyebrow">Auto-scheduled</p>
+          <h2>Whole day plan</h2>
+        </div>
+        <div class="progress-ring" style="width:72px;height:72px"><span data-score style="width:52px;height:52px;font-size:16px">25%</span></div>
+      </div>
+      <div class="timeline">
+        <div class="time-block">
+          <span class="time">7:00 AM</span>
+          <div class="task done">
+            <div class="row between"><strong>Wake alarm + plan</strong><span class="tag" data-status>Done</span></div>
+            <p class="small">Alarm rings, mood check appears, and the coach confirms today's top goal.</p>
+            <div class="tag-row"><button class="btn small-btn" data-task-action="done">Done</button><button class="btn secondary small-btn" data-task-action="snooze">Snooze</button><button class="btn secondary small-btn" data-task-action="skip">Reschedule</button></div>
+          </div>
+        </div>
+        <div class="time-block">
+          <span class="time">9:30 AM</span>
+          <div class="task">
+            <div class="row between"><strong>App deep work</strong><span class="tag blue" data-status>Now</span></div>
+            <p class="small">Work on the productivity app. Popup asks completed or lagging at the end.</p>
+            <div class="tag-row"><button class="btn small-btn" data-task-action="done">Done</button><button class="btn secondary small-btn" data-task-action="snooze">Snooze</button><button class="btn secondary small-btn" data-task-action="skip">Reschedule</button></div>
+          </div>
+        </div>
+        <div class="time-block">
+          <span class="time">2:00 PM</span>
+          <div class="task">
+            <div class="row between"><strong>Lag check popup</strong><span class="tag gold" data-status>Pending</span></div>
+            <p class="small">Coach asks what blocked progress and what needs to be added.</p>
+            <div class="tag-row"><button class="btn small-btn" data-task-action="done">Done</button><button class="btn secondary small-btn" data-task-action="snooze">Snooze</button><button class="btn secondary small-btn" data-task-action="skip">Reschedule</button></div>
+          </div>
+        </div>
+        <div class="time-block">
+          <span class="time">9:00 PM</span>
+          <div class="task">
+            <div class="row between"><strong>Daily report</strong><span class="tag" data-status>Pending</span></div>
+            <p class="small">Generate score, missed tasks, lag reasons, and tomorrow's improved plan.</p>
+            <div class="tag-row"><button class="btn small-btn" data-task-action="done">Done</button><button class="btn secondary small-btn" data-task-action="snooze">Snooze</button><button class="btn secondary small-btn" data-task-action="skip">Reschedule</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <nav class="bottom-nav">
+      <a class="nav-item" href="dashboard.html">Home</a><a class="nav-item active" href="plan.html">Plan</a><a class="nav-item" href="floating-coach.html">Coach</a><a class="nav-item" href="reports.html">Reports</a><a class="nav-item" href="settings.html">Settings</a>
+    </nav>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

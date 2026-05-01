@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Onboarding Chat</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="phone">
+    <div class="status-bar"><span data-time>09:30</span><span class="status-icons"><i class="signal"></i><i class="signal"></i><i class="signal"></i><i class="pill-dot"></i></span></div>
+    <section class="screen chat-screen">
+      <div class="top-row">
+        <div>
+          <p class="eyebrow">AI goal conversation</p>
+          <h2>Tell me your goals</h2>
+        </div>
+        <a class="btn ghost small-btn" href="index.html">Exit</a>
+      </div>
+      <div class="card tint-card compact-card">
+        <div class="row between">
+          <span class="small muted">Building your automation profile</span>
+          <strong data-chat-count>1 / 8</strong>
+        </div>
+        <div class="progress-track"><span data-chat-progress style="width:12%"></span></div>
+      </div>
+
+      <div class="chat-list interactive-chat" data-chat-log>
+        <div class="bubble ai">Hi. I will collect your yearly, monthly, and daily goals, then create your whole-day automated plan.</div>
+        <div class="bubble ai">First, what do you want to achieve this year?</div>
+      </div>
+
+      <div class="card tint-card compact-card">
+        <h3>Captured so far</h3>
+        <div class="tag-row" data-captured-tags>
+          <span class="tag">Yearly goal pending</span>
+        </div>
+      </div>
+
+      <div class="input-bar">
+        <input aria-label="Demo answer" data-chat-input value="This year I want to build my app, improve health, study consistently, and stop wasting evenings.">
+        <button class="icon-btn" type="button" data-chat-send aria-label="Send answer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 14-7-7 14-2-5-5-2Z"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reports</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="phone">
+    <div class="status-bar"><span data-time>09:30</span><span class="status-icons"><i class="signal"></i><i class="signal"></i><i class="signal"></i><i class="pill-dot"></i></span></div>
+    <section class="screen with-nav">
+      <p class="eyebrow">Insights</p>
+      <h2>Progress reports</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="daily">Daily</button>
+        <button class="tab" data-tab="monthly">Monthly</button>
+        <button class="tab" data-tab="annual">Annual</button>
+      </div>
+
+      <section class="report-panel active" data-panel="daily">
+        <div class="card row between">
+          <div>
+            <h3>Today's score</h3>
+            <p class="small">Strong morning, slight drift after lunch.</p>
+          </div>
+          <div class="progress-ring"><span>74%</span></div>
+        </div>
+        <div class="card">
+          <h3>Planned vs completed</h3>
+          <div class="bar-chart">
+            <div class="bar"><span style="height:72%"></span>Plan</div>
+            <div class="bar"><span style="height:64%"></span>Focus</div>
+            <div class="bar"><span style="height:48%"></span>Health</div>
+            <div class="bar"><span style="height:78%"></span>Study</div>
+            <div class="bar"><span style="height:38%"></span>Review</div>
+          </div>
+        </div>
+        <div class="card tint-card">
+          <h3>Coach note</h3>
+          <p>You won the morning. Tomorrow I will keep the hardest task before noon and move the health habit before dinner.</p>
+        </div>
+      </section>
+
+      <section class="report-panel" data-panel="monthly">
+        <div class="grid-2">
+          <div class="card metric"><strong>21</strong><span class="muted small">productive days</span></div>
+          <div class="card metric"><strong>68%</strong><span class="muted small">monthly average</span></div>
+        </div>
+        <div class="card">
+          <h3>Monthly score trend</h3>
+          <svg class="line-chart" viewBox="0 0 320 154" aria-label="Monthly score line chart">
+            <rect width="320" height="154" rx="12" fill="#f1f7f5"/>
+            <path d="M22 118 L70 82 L116 96 L164 54 L210 64 L256 38 L298 46" fill="none" stroke="#0e7c78" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <g fill="#0e7c78"><circle cx="22" cy="118" r="5"/><circle cx="70" cy="82" r="5"/><circle cx="116" cy="96" r="5"/><circle cx="164" cy="54" r="5"/><circle cx="210" cy="64" r="5"/><circle cx="256" cy="38" r="5"/><circle cx="298" cy="46" r="5"/></g>
+          </svg>
+        </div>
+        <div class="card">
+          <h3>Pattern found</h3>
+          <p>You finish 82% of tasks scheduled before noon and only 39% after 8 PM. The coach will stop scheduling hard tasks late.</p>
+        </div>
+      </section>
+
+      <section class="report-panel" data-panel="annual">
+        <div class="card dark-card">
+          <h3>Annual goal progress</h3>
+          <p>You moved 31% toward the yearly goal. Current risk: app progress is strong, health consistency is behind.</p>
+          <div class="bar-chart" style="height:112px">
+            <div class="bar"><span style="height:30%"></span>Q1</div>
+            <div class="bar"><span style="height:45%"></span>Q2</div>
+            <div class="bar"><span style="height:58%"></span>Q3</div>
+            <div class="bar"><span style="height:72%"></span>Q4</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Goal breakdown</h3>
+          <div class="stack">
+            <div class="row between"><span>App building</span><span class="tag">42%</span></div>
+            <div class="row between"><span>Study routine</span><span class="tag blue">34%</span></div>
+            <div class="row between"><span>Health consistency</span><span class="tag gold">19%</span></div>
+          </div>
+        </div>
+        <div class="card tint-card">
+          <h3>Annual coaching decision</h3>
+          <p>Next month will add fixed exercise alarms before dinner and reduce late-night app work.</p>
+        </div>
+      </section>
+    </section>
+    <nav class="bottom-nav">
+      <a class="nav-item" href="dashboard.html">Home</a><a class="nav-item" href="plan.html">Plan</a><a class="nav-item" href="floating-coach.html">Coach</a><a class="nav-item active" href="reports.html">Reports</a><a class="nav-item" href="settings.html">Settings</a>
+    </nav>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
