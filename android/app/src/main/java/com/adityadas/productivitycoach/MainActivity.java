@@ -1,4 +1,4 @@
-package com.example.todoey_flutter;
+package com.adityadas.productivitycoach;
 
 import io.flutter.embedding.android.FlutterActivity;
 

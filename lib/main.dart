@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(Myapp());
-}
+import 'app/productivity_coach_app.dart';
+import 'core/config/auth_config.dart';
 
-class Myapp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: LoginScreen(),
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: '.env', isOptional: true);
+
+  if (AuthConfig.hasSupabaseConfig) {
+    await Supabase.initialize(
+      url: AuthConfig.supabaseUrl,
+      anonKey: AuthConfig.supabaseAnonKey,
     );
   }
+
+  runApp(const ProductivityCoachApp());
 }
