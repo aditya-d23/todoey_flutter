@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "529922311070",
+    "project_id": "ai-productivity-coach-e8c48",
+    "storage_bucket": "ai-productivity-coach-e8c48.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529922311070:android:4efae3dd3cef7f64f80c8f",
+        "android_client_info": {
+          "package_name": "com.adityadas.productivitycoach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqzBR4xWcqDAGWrgX5f6m4TpTGOYfdNsA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
