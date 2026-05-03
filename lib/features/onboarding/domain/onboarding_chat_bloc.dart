@@ -2,8 +2,10 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/ai/gemini_chat_service.dart';
+import '../../../core/ai/plan_generation_service.dart';
 import '../../../core/models/chat_message.dart';
 import '../../../core/models/productivity_profile.dart';
+import '../../planner/data/plan_repository.dart';
 import '../data/profile_repository.dart';
 import 'onboarding_chat_event.dart';
 import 'onboarding_chat_state.dart';
@@ -115,6 +117,12 @@ class OnboardingChatBloc
       // Save profile and conversation to Supabase
       await _profileRepo.saveProfile(profile);
       await _profileRepo.saveConversationHistory(state.messages);
+
+      // Generate day plan in the same flow (single batch of AI calls)
+      final planService = PlanGenerationService()..initialize();
+      final tasks = await planService.generateDayPlan(profile);
+      final planRepo = PlanRepository();
+      await planRepo.savePlan(tasks);
 
       emit(state.copyWith(
         isCreatingProfile: false,

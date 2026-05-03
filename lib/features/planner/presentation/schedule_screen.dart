@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
-import '../../../core/data/demo_content.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
 import '../../../core/widgets/app_card.dart';
+import '../data/plan_repository.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -13,12 +13,63 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final _statuses = demoTasks.map((task) => task.status).toList();
+  final _planRepo = PlanRepository();
+  List<Map<String, dynamic>>? _tasks;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlan();
+  }
+
+  Future<void> _loadPlan() async {
+    try {
+      final tasks = await _planRepo.loadTodayPlan();
+      setState(() {
+        _tasks = tasks;
+        _isLoading = false;
+      });
+    } catch (_) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final completed = _statuses.where((status) => status == 'Done').length;
-    final score = (completed / demoTasks.length * 100).round();
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Whole Day Plan')),
+        bottomNavigationBar: const AppBottomNav(currentRoute: AppRoutes.plan),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_tasks == null || _tasks!.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Whole Day Plan')),
+        bottomNavigationBar: const AppBottomNav(currentRoute: AppRoutes.plan),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('No plan generated yet.'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.plan),
+                child: const Text('Generate plan'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final completed =
+        _tasks!.where((t) => t['status'] == 'Done').length;
+    final score =
+        (_tasks!.isNotEmpty ? completed / _tasks!.length * 100 : 0).round();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Whole Day Plan')),
@@ -32,7 +83,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Auto-scheduled from your annual, monthly, and daily goals.',
+                    'Auto-scheduled from your goals and habits.',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -48,14 +99,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             ),
           ),
           const SizedBox(height: 14),
-          for (var index = 0; index < demoTasks.length; index++)
+          for (var index = 0; index < _tasks!.length; index++)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _ScheduleTaskCard(
-                task: demoTasks[index],
-                status: _statuses[index],
-                onStatusChanged: (status) {
-                  setState(() => _statuses[index] = status);
+                task: _tasks![index],
+                onStatusChanged: (status) async {
+                  setState(() => _tasks![index]['status'] = status);
+                  await _planRepo.updateTaskStatus(index, status);
                 },
               ),
             ),
@@ -68,16 +119,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 class _ScheduleTaskCard extends StatelessWidget {
   const _ScheduleTaskCard({
     required this.task,
-    required this.status,
     required this.onStatusChanged,
   });
 
-  final DayTask task;
-  final String status;
+  final Map<String, dynamic> task;
   final ValueChanged<String> onStatusChanged;
 
   @override
   Widget build(BuildContext context) {
+    final status = (task['status'] ?? 'Pending') as String;
+    final isDone = status == 'Done';
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +139,7 @@ class _ScheduleTaskCard extends StatelessWidget {
               SizedBox(
                 width: 72,
                 child: Text(
-                  task.time,
+                  (task['time'] ?? '') as String,
                   style: const TextStyle(
                     color: Color(0xFF627270),
                     fontWeight: FontWeight.w800,
@@ -96,8 +148,12 @@ class _ScheduleTaskCard extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  task.title,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
+                  (task['title'] ?? '') as String,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
+                    color: isDone ? const Color(0xFF627270) : null,
+                  ),
                 ),
               ),
               AppTag(status),
@@ -105,7 +161,7 @@ class _ScheduleTaskCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            task.description,
+            (task['description'] ?? '') as String,
             style: const TextStyle(color: Color(0xFF627270), height: 1.35),
           ),
           const SizedBox(height: 12),
@@ -114,7 +170,7 @@ class _ScheduleTaskCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               FilledButton.tonal(
-                onPressed: () => onStatusChanged('Done'),
+                onPressed: isDone ? null : () => onStatusChanged('Done'),
                 child: const Text('Done'),
               ),
               FilledButton.tonal(

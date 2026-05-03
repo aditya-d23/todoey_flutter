@@ -1,135 +1,235 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
+import '../../../core/models/productivity_profile.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../onboarding/data/profile_repository.dart';
+import '../../planner/data/plan_repository.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final _profileRepo = ProfileRepository();
+  final _planRepo = PlanRepository();
+
+  ProductivityProfile? _profile;
+  List<Map<String, dynamic>>? _tasks;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final profile = await _profileRepo.loadProfile();
+      final tasks = await _planRepo.loadTodayPlan();
+      if (!mounted) return;
+      setState(() {
+        _profile = profile;
+        _tasks = tasks;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Today')),
+        bottomNavigationBar:
+            const AppBottomNav(currentRoute: AppRoutes.dashboard),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final tasks = _tasks ?? [];
+    final completed = tasks.where((t) => t['status'] == 'Done').length;
+    final score = tasks.isNotEmpty
+        ? (completed / tasks.length * 100).round()
+        : 0;
+
+    // Find next pending task
+    final nextTask = tasks.cast<Map<String, dynamic>?>().firstWhere(
+          (t) => t!['status'] != 'Done',
+          orElse: () => null,
+        );
+
+    final goalsOnTrack = _profile?.annualGoals.length ?? 0;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Today')),
-      bottomNavigationBar: const AppBottomNav(
-        currentRoute: AppRoutes.dashboard,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Good morning, Aditya',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const CircleAvatar(child: Text('AI')),
-            ],
-          ),
-          const SizedBox(height: 16),
-          AppCard(
-            child: Row(
+      bottomNavigationBar:
+          const AppBottomNav(currentRoute: AppRoutes.dashboard),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Row(
               children: [
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Live productivity score',
-                        style: TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Score changes from alarms, task popups, lag reasons, and completed goals.',
-                        style: TextStyle(
-                          color: Color(0xFF627270),
-                          height: 1.35,
+                Expanded(
+                  child: Text(
+                    _greeting(),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
                         ),
-                      ),
-                    ],
                   ),
                 ),
-                const SizedBox(width: 14),
-                _ScoreRing(score: 74),
+                const CircleAvatar(child: Text('AI')),
               ],
             ),
-          ),
-          const SizedBox(height: 14),
-          AppCard(
-            color: const Color(0xFF123533),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Next automated action',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '9:30 AM app-building focus block',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+            const SizedBox(height: 16),
+
+            // Live score
+            AppCard(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Live productivity score',
+                          style: TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '$completed/${tasks.length} tasks completed today.',
+                          style: const TextStyle(
+                            color: Color(0xFF627270),
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Coach will show a popup at start, midway, and end.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-                const SizedBox(height: 14),
-                ElevatedButton(
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.schedule),
-                  child: const Text('View schedule'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Row(
-            children: [
-              Expanded(
-                child: _DashboardMetric(value: '3/5', label: 'goals on track'),
+                  const SizedBox(width: 14),
+                  _ScoreRing(score: score),
+                ],
               ),
-              SizedBox(width: 12),
-              Expanded(
-                child: _DashboardMetric(value: '2', label: 'nudges left'),
+            ),
+            const SizedBox(height: 14),
+
+            // Next action
+            AppCard(
+              color: const Color(0xFF123533),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Next automated action',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    nextTask != null
+                        ? '${nextTask['time']} ${nextTask['title']}'
+                        : 'All tasks complete! 🎉',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    nextTask != null
+                        ? (nextTask['description'] ?? '') as String
+                        : 'Great work today!',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 14),
+                  ElevatedButton(
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.schedule),
+                    child: const Text('View schedule'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Metrics
+            Row(
+              children: [
+                Expanded(
+                  child: _DashboardMetric(
+                    value: '$completed/${tasks.length}',
+                    label: 'tasks done',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DashboardMetric(
+                    value: '$goalsOnTrack',
+                    label: 'annual goals',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            // Quick actions
+            AppCard(
+              child: Column(
+                children: [
+                  _ActionTile(
+                    title: _profile?.wakeTime.isNotEmpty == true
+                        ? '${_profile!.wakeTime} wake alarm'
+                        : 'Wake alarm',
+                    status: 'Set',
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.schedule),
+                  ),
+                  _ActionTile(
+                    title: 'Task completion popup',
+                    status: nextTask != null ? 'Active' : 'Done',
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.coach),
+                  ),
+                  _ActionTile(
+                    title: 'Daily report',
+                    status: _profile?.sleepTime ?? '9 PM',
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.reports),
+                  ),
+                ],
+              ),
+            ),
+
+            // No plan generated yet
+            if (tasks.isEmpty) ...[
+              const SizedBox(height: 14),
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AppRoutes.plan),
+                child: const Text('Generate today\'s plan'),
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-          AppCard(
-            child: Column(
-              children: [
-                _ActionTile(
-                  title: '6:15 wake alarm',
-                  status: 'Set',
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.schedule),
-                ),
-                _ActionTile(
-                  title: 'Task completion popup',
-                  status: 'Now',
-                  onTap: () => Navigator.of(context).pushNamed(AppRoutes.coach),
-                ),
-                _ActionTile(
-                  title: 'Night report',
-                  status: '9 PM',
-                  onTap: () =>
-                      Navigator.of(context).pushNamed(AppRoutes.reports),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 }
 

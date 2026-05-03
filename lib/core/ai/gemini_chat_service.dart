@@ -47,7 +47,7 @@ class GeminiChatService {
     }
 
     _model = GenerativeModel(
-      model: 'gemini-flash-latest',
+      model: 'gemini-2.5-flash',
       apiKey: apiKey,
       systemInstruction: Content.system(onboardingSystemPrompt),
     );

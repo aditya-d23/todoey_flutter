@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/app_routes.dart';
+import '../../../core/models/productivity_profile.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../onboarding/data/profile_repository.dart';
+import '../../planner/data/plan_repository.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -12,10 +15,54 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
+  final _profileRepo = ProfileRepository();
+  final _planRepo = PlanRepository();
+
   int _selected = 0;
+  ProductivityProfile? _profile;
+  List<Map<String, dynamic>>? _tasks;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  /// Load from Supabase only — NO AI calls.
+  Future<void> _loadData() async {
+    try {
+      final profile = await _profileRepo.loadProfile();
+      final tasks = await _planRepo.loadTodayPlan();
+      if (!mounted) return;
+      setState(() {
+        _profile = profile;
+        _tasks = tasks;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  int _calcScore() {
+    if (_tasks == null || _tasks!.isEmpty) return 0;
+    final done = _tasks!.where((t) => t['status'] == 'Done').length;
+    return (done / _tasks!.length * 100).round();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Progress Reports')),
+        bottomNavigationBar:
+            const AppBottomNav(currentRoute: AppRoutes.reports),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Progress Reports')),
       bottomNavigationBar: const AppBottomNav(currentRoute: AppRoutes.reports),
@@ -25,231 +72,249 @@ class _ReportsScreenState extends State<ReportsScreen> {
           SegmentedButton<int>(
             segments: const [
               ButtonSegment(value: 0, label: Text('Daily')),
-              ButtonSegment(value: 1, label: Text('Monthly')),
-              ButtonSegment(value: 2, label: Text('Annual')),
+              ButtonSegment(value: 1, label: Text('Profile')),
             ],
             selected: {_selected},
             onSelectionChanged: (value) =>
                 setState(() => _selected = value.first),
           ),
           const SizedBox(height: 16),
-          if (_selected == 0) const _DailyReport(),
-          if (_selected == 1) const _MonthlyReport(),
-          if (_selected == 2) const _AnnualReport(),
+          if (_selected == 0) _buildDailyReport(context),
+          if (_selected == 1) _buildProfileReport(context),
         ],
       ),
     );
   }
-}
 
-class _DailyReport extends StatelessWidget {
-  const _DailyReport();
+  Widget _buildDailyReport(BuildContext context) {
+    final tasks = _tasks ?? [];
+    final completed = tasks.where((t) => t['status'] == 'Done').length;
+    final snoozed = tasks.where((t) => t['status'] == 'Snoozed').length;
+    final pending = tasks.length - completed - snoozed;
+    final score = _calcScore();
 
-  @override
-  Widget build(BuildContext context) {
+    // Category breakdown
+    final categoryStats = <String, List<int>>{};
+    for (final t in tasks) {
+      final cat = (t['category'] ?? 'routine') as String;
+      categoryStats.putIfAbsent(cat, () => [0, 0]);
+      categoryStats[cat]![1]++;
+      if (t['status'] == 'Done') categoryStats[cat]![0]++;
+    }
+
     return Column(
-      children: const [
-        _ScoreCard(
-          title: 'Today score',
-          score: '74%',
-          note: 'Strong morning, slight drift after lunch.',
+      children: [
+        // Score
+        AppCard(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Today\'s score',
+                        style: TextStyle(fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 6),
+                    Text(
+                      '$completed done, $snoozed snoozed, $pending pending',
+                      style: const TextStyle(color: Color(0xFF627270)),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$score%',
+                style: const TextStyle(
+                  color: Color(0xFF0E7C78),
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
         ),
-        SizedBox(height: 14),
-        _Bars(title: 'Planned vs completed', values: [72, 64, 48, 78, 38]),
-        SizedBox(height: 14),
-        _CoachNote(
-          title: 'Coach note',
-          note:
-              'You won the morning. Tomorrow I will keep hard work before noon and move the health habit before dinner.',
-        ),
-      ],
-    );
-  }
-}
+        const SizedBox(height: 14),
 
-class _MonthlyReport extends StatelessWidget {
-  const _MonthlyReport();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        Row(
-          children: [
-            Expanded(
-              child: _Metric(value: '21', label: 'productive days'),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: _Metric(value: '68%', label: 'monthly average'),
-            ),
-          ],
-        ),
-        SizedBox(height: 14),
-        _Bars(title: 'Monthly score trend', values: [42, 56, 61, 74, 68]),
-        SizedBox(height: 14),
-        _CoachNote(
-          title: 'Pattern found',
-          note:
-              'You finish 82% of tasks before noon and only 39% after 8 PM. The coach will avoid hard tasks late.',
-        ),
-      ],
-    );
-  }
-}
-
-class _AnnualReport extends StatelessWidget {
-  const _AnnualReport();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: const [
-        _ScoreCard(
-          title: 'Annual goal progress',
-          score: '31%',
-          note:
-              'App progress is strong. Health consistency needs fixed alarms before dinner.',
-        ),
-        SizedBox(height: 14),
-        _Bars(title: 'Quarterly projection', values: [30, 45, 58, 72]),
-        SizedBox(height: 14),
-        _CoachNote(
-          title: 'Annual coaching decision',
-          note:
-              'Next month will add exercise alarms and reduce late-night app work.',
-        ),
-      ],
-    );
-  }
-}
-
-class _ScoreCard extends StatelessWidget {
-  const _ScoreCard({
-    required this.title,
-    required this.score,
-    required this.note,
-  });
-
-  final String title;
-  final String score;
-  final String note;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Row(
-        children: [
-          Expanded(
+        // Category breakdown
+        if (categoryStats.isNotEmpty)
+          AppCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 6),
-                Text(note, style: const TextStyle(color: Color(0xFF627270))),
-              ],
-            ),
-          ),
-          Text(
-            score,
-            style: const TextStyle(
-              color: Color(0xFF0E7C78),
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
-          ),
-          Text(label, style: const TextStyle(color: Color(0xFF627270))),
-        ],
-      ),
-    );
-  }
-}
-
-class _Bars extends StatelessWidget {
-  const _Bars({required this.title, required this.values});
-
-  final String title;
-  final List<int> values;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 132,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                for (final value in values)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: FractionallySizedBox(
-                        heightFactor: value / 100,
-                        alignment: Alignment.bottomCenter,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0E7C78),
-                            borderRadius: BorderRadius.circular(8),
+                const Text('Category breakdown',
+                    style: TextStyle(fontWeight: FontWeight.w900)),
+                const SizedBox(height: 12),
+                for (final entry in categoryStats.entries)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            entry.key.toUpperCase(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
-                      ),
+                        Text(
+                          '${entry.value[0]}/${entry.value[1]}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF0E7C78),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        SizedBox(
+                          width: 80,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: entry.value[1] > 0
+                                  ? entry.value[0] / entry.value[1]
+                                  : 0,
+                              minHeight: 6,
+                              backgroundColor: const Color(0xFFDCE6E3),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
               ],
             ),
           ),
-        ],
-      ),
+        const SizedBox(height: 14),
+
+        // Coach note (local, no AI)
+        AppCard(
+          color: const Color(0xFFEAF6F3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.smart_toy,
+                      color: Color(0xFF0E7C78), size: 20),
+                  const SizedBox(width: 8),
+                  Text('Coach Summary',
+                      style: Theme.of(context).textTheme.titleMedium),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _generateLocalCoachNote(completed, tasks.length, snoozed),
+                style: const TextStyle(height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Generate coach note locally — NO AI call.
+  String _generateLocalCoachNote(int completed, int total, int snoozed) {
+    if (total == 0) return 'No tasks scheduled today. Generate a plan first!';
+
+    final score = (completed / total * 100).round();
+
+    if (score >= 80) {
+      return 'Excellent day! You completed $completed of $total tasks ($score%). '
+          'Keep this momentum going tomorrow.';
+    }
+    if (score >= 50) {
+      return 'Solid progress — $completed of $total tasks done ($score%). '
+          '${snoozed > 0 ? "$snoozed tasks snoozed. " : ""}'
+          'Focus on finishing remaining tasks before your weak hours.';
+    }
+    if (score > 0) {
+      return 'You\'ve completed $completed of $total tasks so far ($score%). '
+          'Try to tackle the most important remaining task next. '
+          'Small wins build momentum!';
+    }
+    return 'No tasks completed yet today. Start with your easiest task '
+        'to build momentum, then tackle the bigger ones.';
+  }
+
+  Widget _buildProfileReport(BuildContext context) {
+    if (_profile == null) {
+      return const Center(child: Text('No profile found.'));
+    }
+
+    final p = _profile!;
+
+    return Column(
+      children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Your coaching profile',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              _ProfileRow('Coaching tone', p.coachingTone),
+              _ProfileRow('Wake time', p.wakeTime),
+              _ProfileRow('Sleep time', p.sleepTime),
+              _ProfileRow('Focus blocks', '${p.focusWindows.length}'),
+              _ProfileRow('Annual goals', '${p.annualGoals.length} goals'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        AppCard(
+          color: const Color(0xFFEAF6F3),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Annual goals',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 10),
+              for (final goal in p.annualGoals)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.check_circle,
+                          color: Color(0xFF0E7C78), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(goal)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        ElevatedButton(
+          onPressed: () =>
+              Navigator.of(context).pushNamed(AppRoutes.onboarding),
+          child: const Text('Re-run onboarding'),
+        ),
+      ],
     );
   }
 }
 
-class _CoachNote extends StatelessWidget {
-  const _CoachNote({required this.title, required this.note});
+class _ProfileRow extends StatelessWidget {
+  const _ProfileRow(this.label, this.value);
 
-  final String title;
-  final String note;
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      color: const Color(0xFFEAF6F3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          Text(note, style: const TextStyle(height: 1.4)),
+          Expanded(
+            child: Text(label,
+                style: const TextStyle(color: Color(0xFF627270))),
+          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
         ],
       ),
     );
