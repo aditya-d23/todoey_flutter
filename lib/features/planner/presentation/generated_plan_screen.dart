@@ -56,9 +56,7 @@ class _GeneratedPlanScreenState extends State<GeneratedPlanScreen> {
 
   /// Regenerate plan — ONLY called by explicit user tap.
   Future<void> _regeneratePlan() async {
-    if (_profile == null) {
-      _profile = await _profileRepo.loadProfile();
-    }
+    _profile ??= await _profileRepo.loadProfile();
     if (_profile == null) {
       setState(() => _error = 'No profile found.');
       return;
